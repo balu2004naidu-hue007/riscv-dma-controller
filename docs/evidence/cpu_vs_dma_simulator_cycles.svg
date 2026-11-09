@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+  <rect width="960" height="600" fill="#ffffff"/>
+  <text x="480" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#182230">PicoRV32 Simulation: CPU Copy vs DMA Path</text>
+  <text x="480" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#536273">Simulator cycles by transfer size (lower is fewer simulated cycles)</text>
+  <line x1="120" y1="480" x2="900" y2="480" stroke="#455468" stroke-width="2"/>
+  <line x1="120" y1="120" x2="120" y2="480" stroke="#455468" stroke-width="2"/>
+  <g font-family="Arial, sans-serif" font-size="13" fill="#455468" text-anchor="end">
+    <text x="108" y="485">0</text>
+    <text x="108" y="403">500</text>
+    <text x="108" y="321">1,000</text>
+    <text x="108" y="239">1,500</text>
+    <text x="108" y="157">2,000</text>
+  </g>
+  <g stroke="#dce3eb" stroke-width="1">
+    <line x1="120" y1="398" x2="900" y2="398"/>
+    <line x1="120" y1="316" x2="900" y2="316"/>
+    <line x1="120" y1="234" x2="900" y2="234"/>
+    <line x1="120" y1="152" x2="900" y2="152"/>
+  </g>
+  <text x="32" y="300" transform="rotate(-90 32 300)" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" fill="#344054">Simulator cycles</text>
+  <rect x="225" y="454.6" width="64" height="25.4" rx="4" fill="#3b82f6"/>
+  <rect x="295" y="437.7" width="64" height="42.3" rx="4" fill="#16a34a"/>
+  <rect x="465" y="389.6" width="64" height="90.4" rx="4" fill="#3b82f6"/>
+  <rect x="535" y="423.8" width="64" height="56.2" rx="4" fill="#16a34a"/>
+  <rect x="705" y="130.9" width="64" height="349.1" rx="4" fill="#3b82f6"/>
+  <rect x="775" y="362.0" width="64" height="118.0" rx="4" fill="#16a34a"/>
+  <g font-family="Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#17212f">
+    <text x="257" y="445">155</text>
+    <text x="327" y="428">258</text>
+    <text x="497" y="380">551</text>
+    <text x="567" y="414">342</text>
+    <text x="737" y="121">2,135</text>
+    <text x="807" y="353">720</text>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="16" fill="#344054" text-anchor="middle">
+    <text x="292" y="510">16 bytes</text>
+    <text x="532" y="510">64 bytes</text>
+    <text x="772" y="510">256 bytes</text>
+  </g>
+  <rect x="275" y="540" width="18" height="18" fill="#3b82f6" rx="3"/>
+  <text x="302" y="554" font-family="Arial, sans-serif" font-size="14" fill="#344054">CPU copy loop</text>
+  <rect x="485" y="540" width="18" height="18" fill="#16a34a" rx="3"/>
+  <text x="512" y="554" font-family="Arial, sans-serif" font-size="14" fill="#344054">DMA setup + transfer + polling</text>
+  <text x="480" y="584" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#667085">Simulation-only values; the compared measurement windows include different work.</text>
+</svg>

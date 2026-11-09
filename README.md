@@ -1,49 +1,42 @@
 # RISC-V DMA Controller
 
-Design and simulation verification of a fault-contained 32-bit memory-to-memory DMA controller integrated with a PicoRV32 RISC-V processor and bare-metal C firmware.
+**Design and Verification of a Fault-Contained RISC-V DMA Controller with Bare-Metal Firmware Driver**
 
-This repository contains the project source, SystemVerilog RTL, C firmware, Python reference model, self-checking testbenches, validation notes, and evidence.
+A laptop-only RTL and firmware project implementing a single-channel, 32-bit memory-to-memory DMA controller in SystemVerilog, integrated with an external PicoRV32 RISC-V core and bare-metal C firmware.
 
-## Highlights
+The project is simulation-verified. It is not an FPGA implementation or a physical-hardware benchmark.
 
-- Single-channel, 32-bit memory-to-memory DMA
-- Memory-mapped control and status registers
-- Descriptor-based transfers and bounded descriptor chaining
-- Descriptor/address validation and transfer error reporting
-- CPU/DMA round-robin bus arbitration
-- Abort and recovery handling
-- Bare-metal C firmware driver
-- Python reference model and SystemVerilog testbenches
-- PicoRV32 CPU integration simulation
+## What it demonstrates
 
-## Repository layout
+- Memory-mapped DMA configuration and status registers
+- Five-word descriptors and bounded descriptor chaining (up to 256 descriptors)
+- Descriptor, alignment, length, SRAM-range, overlap and control-field checks
+- Single-outstanding valid/ready memory transactions
+- CPU/DMA round-robin arbitration with grant retention under backpressure
+- DONE, FAULT and ABORT status/interrupt signalling
+- Transaction-boundary abort and restart/recovery behavior
+- Bare-metal C driver and PicoRV32 firmware integration
+- Python reference-model tests and self-checking SystemVerilog testbenches
 
-- `rtl/` — DMA controller, arbiter, fabric, SRAM and PicoRV32 integration
-- `firmware/` — bare-metal C driver, firmware entry point and linker/startup files
-- `tb/` — SystemVerilog testbenches
-- `model/` — Python reference model
-- `tests/` — Python unit tests
-- `scripts/` — build/test helpers and PicoRV32 fetch script
-- `docs/` — architecture, register map, setup, validation, walkthrough and limitations
-- `docs/evidence/` — waveform and CPU-vs-DMA simulator-cycle chart
-- `artifacts/` — recorded firmware build outputs and checksums
+## Architecture
 
-## Validation record
+```text
+Bare-metal C firmware
+        |
+     PicoRV32
+        |
+  System fabric
+   |         |
+DMA regs  CPU/DMA round-robin arbiter
+              |
+          Shared SRAM
+```
 
-The recorded Windows acceptance run reported:
+PicoRV32 is an upstream CPU core, not a custom CPU designed in this project. The DMA subsystem, system fabric, arbiter, SRAM simulation model, firmware driver and verification collateral are the project work.
 
-- Python reference-model tests: 26 passed
-- Extended DMA RTL scenarios: 8 passed
-- Arbiter testbench: passed
-- Clang RV32 firmware build: passed
-- PicoRV32 + DMA integration simulation: passed
-- Combined acceptance suite: passed
+## CPU-vs-DMA simulator-cycle results
 
-See [docs/current_validation.md](docs/current_validation.md) and [docs/windows_setup.md](docs/windows_setup.md) for details and reproduction instructions.
-
-## CPU vs DMA simulator-cycle results
-
-![CPU vs DMA simulator cycles](docs/evidence/cpu_vs_dma_simulator_cycles.png)
+![CPU versus DMA simulator-cycle comparison](docs/evidence/cpu_vs_dma_simulator_cycles.svg)
 
 | Transfer size | CPU copy loop | DMA setup + transfer + polling |
 |---|---:|---:|
@@ -51,37 +44,88 @@ See [docs/current_validation.md](docs/current_validation.md) and [docs/windows_s
 | 64 bytes | 551 cycles | 342 cycles |
 | 256 bytes | 2,135 cycles | 720 cycles |
 
-These values are from the PicoRV32 simulation testbench. The CPU metric measures the copy loop; the DMA metric includes setup, transfer and polling. They are simulator-cycle comparisons, not physical hardware timing or throughput measurements. Small transfers can be slower through DMA because setup overhead dominates. See [docs/graph_and_output_guide.md](docs/graph_and_output_guide.md).
+Interpretation: for 16 bytes, the DMA path costs more because setup and polling dominate. At 64 and 256 bytes, fewer simulator cycles were recorded for the DMA path in this particular testbench. The CPU baseline measures the copy loop; the DMA result includes setup, transfer and polling. These figures are **simulator cycles**, not physical throughput, latency or power measurements.
 
-## GTKWave evidence
+## Validation record
 
-[Waveform review screenshot](docs/evidence/dma_extended_waveform_review.png) shows a time-domain trace of clock/reset, register accesses, memory handshake activity, controller state and completion/fault/abort-related signals. A waveform is a signal-versus-time debugging view, not a performance graph.
+The project owner reported the following Windows/MSYS2 UCRT64 acceptance results on 2026-11-09:
 
-To inspect generated VCD traces after running the simulations:
+| Verification stage | Result |
+|---|---:|
+| Python reference-model tests | 26 passed |
+| Extended DMA RTL scenarios | 8 passed |
+| CPU/DMA arbiter testbench | Passed |
+| Clang RV32 bare-metal firmware build | Passed |
+| PicoRV32 + DMA integration simulation | Passed |
+| Combined acceptance target | Passed |
+
+See [the full validation record](docs/current_validation.md). Icarus emitted non-fatal constant-select notices in `always_*` blocks; the reported builds and simulations completed successfully.
+
+## Repository layout
+
+- `rtl/` — DMA controller, arbiter, simulation SRAM, system fabric and PicoRV32 SoC wrapper
+- `firmware/` — bare-metal C driver, benchmark firmware, startup and linker script
+- `tb/` — DMA, arbiter and PicoRV32 integration testbenches
+- `model/` — independent Python descriptor-validation reference model
+- `tests/` — Python unit tests
+- `scripts/` — build/test helpers, memory-image conversion and PicoRV32 fetch script
+- `docs/` — architecture, register map, setup, walkthrough, validation and known limitations
+- `docs/evidence/` — CPU-vs-DMA simulator-cycle chart
+
+## Build and run
+
+Recommended environment: MSYS2 UCRT64 on Windows, or a compatible Linux environment, with Python 3, GNU Make, Icarus Verilog/VVP, Clang/LLD, LLVM objcopy, Git and GTKWave.
+
+Fetch the upstream CPU source:
+
+```sh
+bash scripts/get_picorv32.sh
+```
+
+For exact reproducibility of the reported run, use PicoRV32 commit:
+
+```text
+ef203c2b0a3fb793280f5114941416c425c5b461
+```
+
+Run the acceptance stages:
+
+```sh
+python -m unittest discover -s tests -v
+make test-rtl
+make test-arbiter
+make firmware-clang
+make test-cpu-clang
+make test-system-clang
+```
+
+See [Windows setup](docs/windows_setup.md) and [demo walkthrough](docs/demo_walkthrough.md) for more details.
+
+## Viewing waveforms
+
+The simulations generate VCD traces under `build/`:
 
 ```sh
 gtkwave build/dma_extended.vcd
 gtkwave build/picorv32_dma.vcd
 ```
 
-## Build and test
+The extended DMA waveform shows clock/reset, register accesses, memory handshakes, addresses, controller-state progression, completion, faults and abort behavior over simulation time. The VCDs are generated by the testbenches and are not committed as pre-generated waveform files.
 
-Use the commands documented in the Makefile and setup guide. The PicoRV32 upstream source is fetched separately using:
+See [the output guide](docs/graph_and_output_guide.md) for how to interpret the benchmark chart and waveforms.
 
-```sh
-bash scripts/get_picorv32.sh
-```
+## Scope and known limitations
 
-The recorded validation used PicoRV32 commit `ef203c2b0a3fb793280f5114941416c425c5b461`.
+- One DMA channel; 32-bit word-aligned memory-to-memory transfers only
+- No AXI, burst transfers, cache coherence, multiple channels or byte-granular transfer support
+- SRAM-window validation is not a full IOMMU or system-wide MPU
+- Abort is transaction-boundary controlled; an already committed write is not rolled back
+- Descriptor chains are not atomic; earlier completed descriptors remain completed if a later one faults
+- No FPGA synthesis, place-and-route, timing closure, formal verification, board test or silicon validation is claimed
+- PicoRV32 is fetched separately; it is not vendored in this repository
 
-## Scope and limitations
+Read [known limitations](docs/known_limitations.md) before interpreting or presenting the results.
 
-This is a simulation-verified educational RTL/firmware project. It has not been FPGA-synthesized, physically tested on hardware, formally verified, or timing-closed.
+## Third-party attribution
 
-The design is intentionally scoped to one 32-bit memory-to-memory DMA channel. It does not implement AXI, burst transfers, multiple channels, cache coherence, byte-granular transfers, or a full IOMMU/MPU. Abort is handled at bus transaction boundaries; already committed writes are not rolled back. Descriptor chains are not atomic.
-
-See [docs/known_limitations.md](docs/known_limitations.md) and [docs/architecture.md](docs/architecture.md).
-
-## License and third-party dependency
-
-See [third_party/PICORV32_COPYING.txt](third_party/PICORV32_COPYING.txt) for upstream PicoRV32 licensing and attribution information. The upstream source itself is fetched separately rather than vendored in this repository.
+PicoRV32 is maintained by YosysHQ. The upstream ISC license text is retained at [third_party/PICORV32_COPYING.txt](third_party/PICORV32_COPYING.txt). The fetch script downloads upstream source separately.

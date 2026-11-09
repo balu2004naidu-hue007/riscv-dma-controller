@@ -1,0 +1,11 @@
+build/
+*.vcd
+*.fst
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.elf
+*.hex
+*.bin
+*.mem
