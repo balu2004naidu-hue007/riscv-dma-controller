@@ -6,7 +6,7 @@
 
 This is a simulation-verified educational prototype, not an FPGA implementation, silicon validation, formal proof or production-qualified DMA IP.
 
-## What is included
+## What is included in this repository
 
 - Single-channel, 32-bit, word-aligned memory-to-memory DMA controller in SystemVerilog.
 - Descriptor validation and bounded descriptor chaining.
@@ -17,7 +17,9 @@ This is a simulation-verified educational prototype, not an FPGA implementation,
 - Python reference model and 26 unit tests.
 - DMA, arbiter and CPU-integration SystemVerilog testbenches.
 - Architecture, register map, verification, setup and limitation documentation.
-- Prebuilt RV32 firmware artifacts and waveform-review screenshot evidence.
+- SVG CPU-vs-DMA simulator-cycle chart.
+
+Generated firmware files (`.elf`, `.bin`, `.mem`) and VCD waveform traces are not committed. Build targets regenerate the firmware outputs under `build/`, and simulations generate VCD files under `build/`. The source and testbenches are the canonical project contents.
 
 ## Reproducing the verified run
 
